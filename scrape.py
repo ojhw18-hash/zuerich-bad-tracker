@@ -23,7 +23,7 @@ try:
     time.sleep(3)
 
     # Gästezahl aus <td> mit ID "SSD-4_visitornumer" finden
-    element = driver.find_element(By.ID, "SSD-4_visitornumer")
+    element = driver.find_element(By.ID, "SSD-4_visitornumber")
     guests = element.text.strip()
 
 except Exception as e:
