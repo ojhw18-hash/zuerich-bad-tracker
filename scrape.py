@@ -1,20 +1,41 @@
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 import csv
 from datetime import datetime
+import time
 
 URL = "https://www.stadt-zuerich.ch/de/stadtleben/sport-und-erholung/sport-und-badeanlagen/hallenbaeder/city.html"
 
-response = requests.get(URL)
-soup = BeautifulSoup(response.text, "html.parser")
+# Headless Chrome konfigurieren
+options = Options()
+options.add_argument("--headless=new")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size=1920,1080")
 
-# Die Gästezahl steht im HTML als Element mit der Klasse "pool-status__value"
-value = soup.select_one(".pool-status__value")
-guests = value.get_text(strip=True) if value else "NA"
+driver = webdriver.Chrome(options=options)
+
+try:
+    driver.get(URL)
+
+    # kleine Wartezeit für JS-Daten
+    time.sleep(3)
+
+    # Gästezahl finden
+    element = driver.find_element(By.CSS_SELECTOR, ".pool-status__value")
+    guests = element.text.strip()
+
+except Exception as e:
+    guests = "NA"
+    print("Fehler beim Scraping:", e)
+
+finally:
+    driver.quit()
 
 timestamp = datetime.now().isoformat(timespec="minutes")
 
-# CSV anhängen
+# CSV anfügen
 with open("gaeste.csv", "a", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
     writer.writerow([timestamp, guests])
