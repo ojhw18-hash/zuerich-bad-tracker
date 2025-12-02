@@ -22,8 +22,8 @@ try:
     # kleine Wartezeit für JS-Daten
     time.sleep(3)
 
-    # Gästezahl finden
-    element = driver.find_element(By.CSS_SELECTOR, ".pool-status__value")
+    # Gästezahl aus <td> mit ID "SSD-4_visitornumer" finden
+    element = driver.find_element(By.ID, "SSD-4_visitornumer")
     guests = element.text.strip()
 
 except Exception as e:
