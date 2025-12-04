@@ -1,13 +1,30 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-import csv
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
-import time
+from zoneinfo import ZoneInfo
+import csv
 
-URL = "https://www.stadt-zuerich.ch/de/stadtleben/sport-und-erholung/sport-und-badeanlagen/hallenbaeder/city.html"
+CH_TZ = ZoneInfo("Europe/Zurich")
 
-# Headless Chrome konfigurieren
+POOLS = {
+    "city": {
+        "url": "https://www.stadt-zuerich.ch/de/stadtleben/sport-und-erholung/sport-und-badeanlagen/hallenbaeder/city.html",
+        "id": "SSD-4_visitornumber",
+    },
+    "blaesi": {
+        "url": "https://www.stadt-zuerich.ch/de/stadtleben/sport-und-erholung/sport-und-badeanlagen/hallenbaeder/blaesi.html",
+        "id": "SSD-2_visitornumber",
+    },
+    "oerlikon": {
+        "url": "https://www.stadt-zuerich.ch/de/stadtleben/sport-und-erholung/sport-und-badeanlagen/hallenbaeder/oerlikon.html",
+        "id": "SSD-7_visitornumber",
+    }
+}
+
+# Chrome Options
 options = Options()
 options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
@@ -16,26 +33,31 @@ options.add_argument("--window-size=1920,1080")
 
 driver = webdriver.Chrome(options=options)
 
-try:
-    driver.get(URL)
+def get_guest_count(url, element_id):
+    try:
+        driver.get(url)
+        elem = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.ID, element_id))
+        )
+        return elem.text.strip()
+    except Exception as e:
+        print(f"Error scraping {url}:", e)
+        return "NA"
 
-    # kleine Wartezeit für JS-Daten
-    time.sleep(3)
+results = {}
+for name, info in POOLS.items():
+    results[name] = get_guest_count(info["url"], info["id"])
 
-    # Gästezahl aus <td> mit ID "SSD-4_visitornumer" finden
-    element = driver.find_element(By.ID, "SSD-4_visitornumber")
-    guests = element.text.strip()
+driver.quit()
 
-except Exception as e:
-    guests = "NA"
-    print("Fehler beim Scraping:", e)
+timestamp = datetime.now(CH_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
-finally:
-    driver.quit()
-
-timestamp = datetime.now().isoformat(timespec="minutes")
-
-# CSV anfügen
+# CSV append
 with open("gaeste.csv", "a", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
-    writer.writerow([timestamp, guests])
+    writer.writerow([
+        timestamp,
+        results["city"],
+        results["blaesi"],
+        results["oerlikon"]
+    ])
