@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import csv
+import time
 
 CH_TZ = ZoneInfo("Europe/Zurich")
 
