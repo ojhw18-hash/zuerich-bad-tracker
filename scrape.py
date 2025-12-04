@@ -36,9 +36,10 @@ driver = webdriver.Chrome(options=options)
 def get_guest_count(url, element_id):
     try:
         driver.get(url)
-        elem = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.ID, element_id))
-        )
+
+        time.sleep(3)
+
+        elem = driver.find_element(By.ID, element_id)
         return elem.text.strip()
     except Exception as e:
         print(f"Error scraping {url}:", e)
